@@ -1,10 +1,9 @@
-**X.509** certificates for user authentication in **MongoDB**
+h1. **X.509** certificates for user authentication in **MongoDB**
 
-specific to windows 10
+*for Windows 10*
 
-*Reference: A similar tutorial is available in the MongoDB documentation:*
-
-*[https://docs.mongodb.com/manual/tutorial/configure-x509-client-authenticatio*n](https://docs.mongodb.com/manual/tutorial/configure-x509-client-authentication/)
+Reference: A similar tutorial is available in the MongoDB documentation: 
+[https://docs.mongodb.com/manual/tutorial/configure-x509-client-authentication]
 
 All code in this document is wrapped in single or triple backticks (\`) - ignore these marks when typing code into the terminal or your text editor. These marks are added to make the page compliant with github flavored markdown.
 
@@ -48,15 +47,19 @@ Creating the x.509 certificate requires the following steps:
 
 1. Configure OpenSSL to create mongodb friendly certificates
 
-2. Create the root private key and certificate
+2. First create the identity for the Certificate Authority (the root organization that’ll verify everyone’s identity)
 
-3. Create the public certificate signing request
+    1. Create the root private key and certificate 
 
-4. Create the certificate
+3. Create the identity for the individual user
 
-5. Merge the certificate and the private key into a single pem file
+    2. Create the private key and generate a certificate signing request (a user can’t create it’s own certificate, it must be verified by a Certificate Authority)
 
-6. Validate the certificate to make sure everything is fine
+    3. Create the certificate
+
+4. Merge the certificate and the private key into a single pem file
+
+5. Validate the certificate to make sure everything is fine
 
 Let’s carry these out step-by-step:
 
@@ -88,7 +91,7 @@ There’s other conditions too but this is our focus for now. Let’s set `keyUs
 
 You are now ready to start making the certificates.
 
-## Creating the private key and certificate
+## Certificate Authority’s private key and certificate
 
 ### Key
 
@@ -134,5 +137,111 @@ Here are the values that I used:
 
 * Email Address -`myname@myemail.com`
 
-Feel free to use the ones you like. Remember to note these values down - they’re going to be useful shortly.
+Feel free to use the ones you like.  Again, open the certificate in a text editor - you’ll realize that this is a plain text file too!
+
+With our root certifying authority creds ready, our certifying authority is ready to sign any end-user’s identity. Let’s move on to creating a certificate signing request.
+
+## User’s Key and Certificate Signing Request
+
+We’ll use a single command to create both the key and the CSR for a user.
+
+Try the following in the command window next:
+
+```openssl req -new -nodes -newkey rsa:2048 -keyout user.key -out user.csr```
+
+![image alt text](image_8.png)
+
+We now have the user key and CSR.
+
+Here are the values that I used when creating these:
+
+* Country Name: `AU`
+
+* State or Province Name:`test`
+
+* Locality Name:`city`
+
+* Organization Name:`DEMO`
+
+* Organizational Unit Name:`UNIT`
+
+* Common Name:`USER`
+
+* Email Address:`user@myemail.com`
+
+* The 'extra' attributes
+
+    * A challenge password:`1234`
+
+    * An optional company name:`DEMO`
+
+Again, *remember these values, *they form the "Distinguished Name" of your user’s certificate. The key and certificate signing request are both plain text files, just like the others that were created before.
+
+We are getting close. Let’s create the x.509 certificates for our user.
+
+## User’s X.509 certificate from CSR
+
+To generate the public certificate, use the following command:
+
+```
+
+openssl x509 -CA my.crt -CAkey myPrivate.key -CAcreateserial -req -days=1000 -in user.csr -out user.crt
+
+```
+
+![image alt text](image_9.png)
+
+Perfect. Now to make it usable, we want to bundle the certificate and the key in a single file. By the way, before we go there, what kind of file would the final certificate be? Text, plain text. :)
+
+## Merge the user’s key & cert
+
+The format we’ll merge this to is called PEM (Privacy Enhanced Mail). As with all other certificates and keys that we have generated till now, this is a plain text file too. Creating this is super simple. Use concatenation, or from the windows command-line, use `copy`, like so:
+
+```
+
+ copy user.key + user.crt user.pem
+
+```
+
+However, if you are using powershell, the plain old `copy` may not work, in which case, use:
+
+```
+
+cmd /c copy user.key + user.crt user.pem
+
+```
+
+![image alt text](image_10.png)
+
+Some of you may point out that we could’ve used the [get-content commandlet](https://docs.microsoft.com/en-us/powershell/module/Microsoft.PowerShell.Management/Get-Content?view=powershell-5.1) in Powershell. Sure! Feel free to use it instead. 
+
+## Certificate validation
+
+Whew! Nearly there!
+
+Our certificate is mint fresh and just to be sure, we’d want to verify it *against the certificate authority*. Use the following command:
+
+```
+
+openssl verify -verbose -CAfile my.crt user.pem
+
+```
+
+Now, let’s check out the subject line (aka the ‘Distinguished Name’) of our certificate, we’ll use this to create a user in Mongo, so keep a note of it. Run the following command:
+
+```
+
+openssl x509 -in user.pem -inform PEM -subject -nameopt RFC2253
+
+```
+
+![image alt text](image_11.png)
+
+Brilliant! Our self-signed certificate is ready to go.
+
+# Reads 
+
+* The OpenSSL Cookbook: [https://www.feistyduck.com/library/openssl-cookbook/online/](https://www.feistyduck.com/library/openssl-cookbook/online/)
+
+* Awesome cryptography: [https://github.com/sobolevn/awesome-cryptography](https://github.com/sobolevn/awesome-cryptography) 
 
