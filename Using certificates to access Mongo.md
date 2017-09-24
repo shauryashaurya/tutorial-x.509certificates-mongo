@@ -18,9 +18,7 @@ We’ll use the 64-bit version listed towards the bottom of this page. Look for 
 
 1. Install the downloaded package (you may need administrative privileges).
 
-2. Once installed, open a command window and type:
-
-openssl
+2. Once installed, open a command window and type:--- srcp Openssl---
 
 ![image alt text](image_0.png)
 
@@ -64,21 +62,21 @@ For MongoDB to work with x.509 certificates, the following conditions need to be
 
 * A single Certificate Authority (CA) must issue the certificates for both the client and the server.
 
-* Client certificates must contain the following fields:
+* Client certificates must contain the following fields:---srcp
 
-    * keyUsage = digitalSignature
+keyUsage = digitalSignature
 
-    * extendedKeyUsage = clientAuth
+extendedKeyUsage = clientAuth---
 
 * Each unique MongoDB user must have a unique certificate.
 
-There’s other conditions too but this is our focus for now. Let’s set keyUsage and extendedKeyUsage fields.
+There’s other conditions too but this is our focus for now. Let’s set ---src keyUsage --- and ---src extendedKeyUsage --- fields.
 
-1. Optional: You may want to add [OpenSSL install location]\bin to your Environment Variables’ Path variable. For e.g. in my case OpenSSL is installed in C:\1\OpenSSL-Win64 so I have added C:\1\OpenSSL-Win64\bin to my Path.
+1. Optional: You may want to add ---src [OpenSSL install location]\bin --- to your Environment Variables’ Path variable. For e.g. in my case OpenSSL is installed in ---src C:\1\OpenSSL-Win64 --- so I have added ---src C:\1\OpenSSL-Win64\bin --- to my Path.
 
-2. Navigate to the directory where OpenSSL is installed, go into the folder called ‘bin’ and make a copy of openssl.cfg. Call this openssl_mongo.cfg. ![image alt text](image_1.png)
+2. Navigate to the directory where OpenSSL is installed, go into the folder called ‘bin’ and make a copy of ---src openssl.cfg ---. Call this ---src openssl_mongo.cfg ---. ![image alt text](image_1.png)
 
-3. Edit openssl_mongo.cfg and search for the configuration section titled: [ usr_cert ] Add the following lines in this section:# added for mongoDBkeyUsage = keyCertSign, digitalSignatureextendedKeyUsage = clientAuth, serverAuth![image alt text](image_2.png)
+3. Edit openssl_mongo.cfg and search for the configuration section titled: ---srcp[ usr_cert ]--- Add the following lines in this section:---srcp# added for mongoDBkeyUsage = keyCertSign, digitalSignatureextendedKeyUsage = clientAuth, serverAuth---![image alt text](image_2.png)
 
 4. In the sections titled:[ v3_ca ] and [ v3_req ]Add the following lines:# added for mongoDBextendedKeyUsage = clientAuth, serverAuth![image alt text](image_3.png)
 
