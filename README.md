@@ -2,10 +2,11 @@
 
 *for Windows 10*
 
-Reference: A similar tutorial is available in the MongoDB documentation: 
-[https://docs.mongodb.com/manual/tutorial/configure-x509-client-authentication](https://docs.mongodb.com/manual/tutorial/configure-x509-client-authentication)
+*Reference: A similar tutorial is available in the MongoDB documentation:*
+*[https://docs.mongodb.com/manual/tutorial/configure-x509-client-authentication](https://docs.mongodb.com/manual/tutorial/configure-x509-client-authentication/)*
 
-All code in this document is wrapped in single or triple backticks (\`) - ignore these marks when typing code into the terminal or your text editor. These marks are added to make the page compliant with github flavored markdown.
+* github.com/shauryashaurya     
+* shauryashaurya@gmail.com
 
 # Prep-work
 
@@ -151,7 +152,7 @@ Try the following in the command window next:
 
 ![image alt text](image_8.png)
 
-We now have the user key and CSR.
+We now have the user key and CSR. Assuming you are running the whole shebang from your localhost, make sure you put common name (CN) to be `127.0.0.1` otherwise put the relevant IP of the Mongodb server here - when authenticating, the CN should match the IP of the server.
 
 Here are the values that I used when creating these:
 
@@ -165,7 +166,7 @@ Here are the values that I used when creating these:
 
 * Organizational Unit Name:`UNIT`
 
-* Common Name:`USER`
+* Common Name:`127.0.0.1`
 
 * Email Address:`user@myemail.com`
 
@@ -239,9 +240,55 @@ openssl x509 -in user.pem -inform PEM -subject -nameopt RFC2253
 
 Brilliant! Our self-signed certificate is ready to go.
 
-# Reads 
+# Add a user to Mongodb 
+
+Before we enable authentication, we now need to add a user to MongoDB.
+
+1. Open two command-line/ powershell windows, in one fire:`mongod`
+
+2. This should start the MongoDB server. (Ensure that the folder `C:\data\db` exists, this is where Mongodb will store its data by default)
+
+3. In the other  window, fire:`mongo`
+
+4. You should enter the mongo shell. 
+
+5. Now run the following command to add the user (notice that there are no spaces in the `subject` - it exists as it was copied from the user’s certificate)
+
+```
+
+db.getSiblingDB("$external").runCommand(  {    createUser: "emailAddress=user@myemail.com,CN=127.0.0.1,OU=UNIT,O=DEMO,L=city,ST=test,C=AU",    roles: [             { role: 'readWrite', db: 'test' },             { role: 'userAdminAnyDatabase', db: 'admin' }           ],    writeConcern: { w: "majority" , wtimeout: 5000 }  })
+
+```
+
+1. If the user got added successfully, you should see `{ "ok" : 1 }![image alt text](image_12.png)
+
+2. Type `exit` to exit the mongo client, move to the mongod window and hit `CTRL+C` to shut down the mongod server.
+
+On to the last leg.
+
+# Using X.509 to login
+
+This is the simple bit. We’ll first start the mongod server with ssl enabled and then login using the mongo client. Once in, we’ll authenticate our user using the subject line.
+
+1. Start `mongod` with SSL enabled:```mongod --clusterAuthMode x509 --sslMode requireSSL --sslPEMKeyFile "C:\1\mongocerts\user.pem" --sslCAFile "C:\1\mongocerts\my.crt"```Notice that I am using the paths relevant to my system, replace these with the paths that you have chosen to store the certificates in on your system.![image alt text](image_13.png)`mongod` should start.
+
+2. In another command / powershell window, use the following command to start the `mongo` client:```mongo --ssl --sslPEMKeyFile "C:\1\mongocerts\user.pem" --sslCAFile "C:\1\mongocerts\my.crt"```Again, remember to tweak the paths to reflect the location of the certificates on your system. 
+
+3. Once `mongo` client starts, use the following command to authenticate our user:```db.getSiblingDB("$external").auth(  {    mechanism: "MONGODB-X509",    user: "emailAddress=user@myemail.com,CN=127.0.0.1,OU=UNIT,O=DEMO,L=city,ST=test,C=AU"  })```Remember to mark the mechanism as `"MONGODB-X509”`If all goes well, the user should now be authenticated and you should see `1` as the output.![image alt text](image_14.png)
+
+There, You are now logged into Mongodb using X.509 certificate authentication.
+
+*Sweet!*
+
+# Read more 
 
 * The OpenSSL Cookbook: [https://www.feistyduck.com/library/openssl-cookbook/online/](https://www.feistyduck.com/library/openssl-cookbook/online/)
 
 * Awesome cryptography: [https://github.com/sobolevn/awesome-cryptography](https://github.com/sobolevn/awesome-cryptography) 
+
+# Who me?
+
+github.com/shauryashaurya
+shauryashaurya@gmail.com
+[www.linkedin.com/in/shauryashaurya/](www.linkedin.com/in/shauryashaurya/)
 
