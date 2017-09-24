@@ -30,7 +30,7 @@ We’ll use the 64-bit version listed towards the bottom of this page. Look for 
 
 # Overview
 
-**This tutorial uses ****MongoDB version ****3.4**
+This tutorial uses **MongoDB version 3.4**
 
 The full exercise will be done in 3 steps:
 
@@ -118,7 +118,7 @@ Use the following command.
 
 `openssl req -x509 -new -extensions v3_ca -key myPrivate.key -days 1000 -out my.crt`
 
-The system will ask you to enter the passphrase for the key (which is `1234` if you used the same one as me) and then ask a bunch of questions to make the certificate. The values that you enter here are combined to create the "Distinguished Name" of your certificate. *Remember these values.*
+The system will ask you to enter the passphrase for the key (which is `1234` if you used the same one as me) and then ask a bunch of questions to make the certificate. The values that you enter here are combined to create the "**Distinguished Name**" of your certificate. *Remember these values.*
 
 ![image alt text](image_7.png)
 
@@ -176,7 +176,7 @@ Here are the values that I used when creating these:
 
     * An optional company name:`DEMO`
 
-Again, *remember these values, *they form the "Distinguished Name" of your user’s certificate. The key and certificate signing request are both plain text files, just like the others that were created before.
+Again, *remember these values*, they form the "**Distinguished Name**" of your user’s certificate. The key and certificate signing request are both plain text files, just like the others that were created before.
 
 We are getting close. Let’s create the x.509 certificates for our user.
 
@@ -228,7 +228,7 @@ openssl verify -verbose -CAfile my.crt user.pem
 
 ```
 
-Now, let’s check out the subject line (aka the ‘Distinguished Name’) of our certificate, we’ll use this to create a user in Mongo, so keep a note of it. Run the following command:
+Now, let’s check out the subject line (aka the ‘**Distinguished Name**’) of our certificate, we’ll use this to create a user in Mongo, so keep a note of it. Run the following command:
 
 ```
 
