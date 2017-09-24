@@ -1,9 +1,9 @@
-# * **X.509** certificates for user authentication in **MongoDB** *
+# _**X.509** certificates for user authentication in **MongoDB**_
 
 *for Windows 10*
 
 Reference: A similar tutorial is available in the MongoDB documentation: 
-[https://docs.mongodb.com/manual/tutorial/configure-x509-client-authentication]
+[https://docs.mongodb.com/manual/tutorial/configure-x509-client-authentication](https://docs.mongodb.com/manual/tutorial/configure-x509-client-authentication)
 
 All code in this document is wrapped in single or triple backticks (\`) - ignore these marks when typing code into the terminal or your text editor. These marks are added to make the page compliant with github flavored markdown.
 
