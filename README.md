@@ -345,7 +345,7 @@ There, You are now logged into Mongodb using X.509 certificate authentication.
 
 # Who me?
 
-* [https://github.com/shauryashaurya](github.com/shauryashaurya)
+* [Github Profile](https://github.com/shauryashaurya)
 * shauryashaurya@gmail.com
-* [https://www.linkedin.com/in/shauryashaurya/](www.linkedin.com/in/shauryashaurya/)
+* [LinkedIn Profile](https://www.linkedin.com/in/shauryashaurya//)
 
