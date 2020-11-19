@@ -82,13 +82,32 @@ There’s other conditions too but this is our focus for now. Let’s set `keyUs
 
 1. Optional: You may want to add `[OpenSSL install location]\bin` to your Environment Variables’ Path variable. For e.g. in my case OpenSSL is installed in `C:\1\OpenSSL-Win64` so I have added `C:\1\OpenSSL-Win64\bin` to my Path.
 
-2. Navigate to the directory where OpenSSL is installed, go into the folder called ‘bin’ and make a copy of `openssl.cfg`. Call this `openssl_mongo.cfg`. ![image alt text](image_1.png)
+2. Navigate to the directory where OpenSSL is installed, go into the folder called ‘bin’ and make a copy of `openssl.cfg`. Call this `openssl_mongo.cfg`. 
+![image alt text](image_1.png)
 
-3. Edit openssl_mongo.cfg and search for the configuration section titled: `[ usr_cert ]` Add the following lines in this section:```# added for mongoDBkeyUsage = keyCertSign, digitalSignatureextendedKeyUsage = clientAuth, serverAuth```![image alt text](image_2.png)
+3. Edit openssl_mongo.cfg and search for the configuration section titled: 
+`[ usr_cert ]` 
+Add the following lines in this section:
+```
+# added for mongoDB
+keyUsage = keyCertSign, digitalSignature
+extendedKeyUsage = clientAuth, serverAuth
+```
+![image alt text](image_2.png)
 
-4. In the sections titled:`[ v3_ca ]` and `[ v3_req ]`Add the following lines:```# added for mongoDBextendedKeyUsage = clientAuth, serverAuth```![image alt text](image_3.png)
+4. In the sections titled:
+`[ v3_ca ]` and 
+`[ v3_req ]`
+Add the following lines:
+```
+# added for mongoDB
+extendedKeyUsage = clientAuth, serverAuth
+```
 
-5. Save & close `openssl_mongo.cfg` and move it to a directory where we’ll create our certificates. In my case I moved it to a folder called mongocerts![image alt text](image_4.png)
+![image alt text](image_3.png)
+
+5. Save & close `openssl_mongo.cfg` and move it to a directory where we’ll create our certificates. In my case I moved it to a folder called mongocerts
+![image alt text](image_4.png)
 
 You are now ready to start making the certificates.
 
@@ -118,7 +137,8 @@ Use the following command.
 
 `openssl req -x509 -new -extensions v3_ca -key myPrivate.key -days 1000 -out my.crt`
 
-The system will ask you to enter the passphrase for the key (which is `1234` if you used the same one as me) and then ask a bunch of questions to make the certificate. The values that you enter here are combined to create the "**Distinguished Name**" of your certificate. *Remember these values.*
+The system will ask you to enter the passphrase for the key (which is `1234` if you used the same one as me) and then ask a bunch of questions to make the certificate. 
+The values that you enter here are combined to create the "**Distinguished Name**" of your certificate. *Remember these values.*
 
 ![image alt text](image_7.png)
 
@@ -148,7 +168,9 @@ We’ll use a single command to create both the key and the CSR for a user.
 
 Try the following in the command window next:
 
-```openssl req -new -nodes -newkey rsa:2048 -keyout user.key -out user.csr```
+```
+openssl req -new -nodes -newkey rsa:2048 -keyout user.key -out user.csr
+```
 
 ![image alt text](image_8.png)
 
@@ -244,11 +266,13 @@ Brilliant! Our self-signed certificate is ready to go.
 
 Before we enable authentication, we now need to add a user to MongoDB.
 
-1. Open two command-line/ powershell windows, in one fire:`mongod`
+1. Open two command-line/ powershell windows, in one fire:
+`mongod`
 
 2. This should start the MongoDB server. (Ensure that the folder `C:\data\db` exists, this is where Mongodb will store its data by default)
 
-3. In the other  window, fire:`mongo`
+3. In the other  window, fire:
+`mongo`
 
 4. You should enter the mongo shell. 
 
@@ -256,11 +280,21 @@ Before we enable authentication, we now need to add a user to MongoDB.
 
 ```
 
-db.getSiblingDB("$external").runCommand(  {    createUser: "emailAddress=user@myemail.com,CN=127.0.0.1,OU=UNIT,O=DEMO,L=city,ST=test,C=AU",    roles: [             { role: 'readWrite', db: 'test' },             { role: 'userAdminAnyDatabase', db: 'admin' }           ],    writeConcern: { w: "majority" , wtimeout: 5000 }  })
+db.getSiblingDB("$external").runCommand(
+  {
+    createUser: "emailAddress=user@myemail.com,CN=127.0.0.1,OU=UNIT,O=DEMO,L=city,ST=test,C=AU",
+    roles: [
+             { role: 'readWrite', db: 'test' },
+             { role: 'userAdminAnyDatabase', db: 'admin' }
+           ],
+    writeConcern: { w: "majority" , wtimeout: 5000 }
+  }
+)
 
 ```
 
-1. If the user got added successfully, you should see `{ "ok" : 1 }![image alt text](image_12.png)
+1. If the user got added successfully, you should see `{ "ok" : 1 }
+![image alt text](image_12.png)
 
 2. Type `exit` to exit the mongo client, move to the mongod window and hit `CTRL+C` to shut down the mongod server.
 
@@ -270,11 +304,32 @@ On to the last leg.
 
 This is the simple bit. We’ll first start the mongod server with ssl enabled and then login using the mongo client. Once in, we’ll authenticate our user using the subject line.
 
-1. Start `mongod` with SSL enabled:```mongod --clusterAuthMode x509 --sslMode requireSSL --sslPEMKeyFile "C:\1\mongocerts\user.pem" --sslCAFile "C:\1\mongocerts\my.crt"```Notice that I am using the paths relevant to my system, replace these with the paths that you have chosen to store the certificates in on your system.![image alt text](image_13.png)`mongod` should start.
+1. Start `mongod` with SSL enabled:
+```
+mongod --clusterAuthMode x509 --sslMode requireSSL --sslPEMKeyFile "C:\1\mongocerts\user.pem" --sslCAFile "C:\1\mongocerts\my.crt"
+```
+Notice that I am using the paths relevant to my system, replace these with the paths that you have chosen to store the certificates in on your system.
+![image alt text](image_13.png)
+`mongod` should start.
 
-2. In another command / powershell window, use the following command to start the `mongo` client:```mongo --ssl --sslPEMKeyFile "C:\1\mongocerts\user.pem" --sslCAFile "C:\1\mongocerts\my.crt"```Again, remember to tweak the paths to reflect the location of the certificates on your system. 
+2. In another command / powershell window, use the following command to start the `mongo` client:
+```
+mongo --ssl --sslPEMKeyFile "C:\1\mongocerts\user.pem" --sslCAFile "C:\1\mongocerts\my.crt"
+```
+Again, remember to tweak the paths to reflect the location of the certificates on your system. 
 
-3. Once `mongo` client starts, use the following command to authenticate our user:```db.getSiblingDB("$external").auth(  {    mechanism: "MONGODB-X509",    user: "emailAddress=user@myemail.com,CN=127.0.0.1,OU=UNIT,O=DEMO,L=city,ST=test,C=AU"  })```Remember to mark the mechanism as `"MONGODB-X509”`If all goes well, the user should now be authenticated and you should see `1` as the output.![image alt text](image_14.png)
+3. Once `mongo` client starts, use the following command to authenticate our user:
+```
+db.getSiblingDB("$external").auth(
+  {
+    mechanism: "MONGODB-X509",
+    user: "emailAddress=user@myemail.com,CN=127.0.0.1,OU=UNIT,O=DEMO,L=city,ST=test,C=AU"
+  }
+)
+```
+Remember to mark the mechanism as `"MONGODB-X509”`
+If all goes well, the user should now be authenticated and you should see `1` as the output.
+![image alt text](image_14.png)
 
 There, You are now logged into Mongodb using X.509 certificate authentication.
 
@@ -282,13 +337,15 @@ There, You are now logged into Mongodb using X.509 certificate authentication.
 
 # Read more 
 
-* The OpenSSL Cookbook: [https://www.feistyduck.com/library/openssl-cookbook/online/](https://www.feistyduck.com/library/openssl-cookbook/online/)
+* The OpenSSL Cookbook: 
+[https://www.feistyduck.com/library/openssl-cookbook/online/](https://www.feistyduck.com/library/openssl-cookbook/online/)
 
-* Awesome cryptography: [https://github.com/sobolevn/awesome-cryptography](https://github.com/sobolevn/awesome-cryptography) 
+* Awesome cryptography: 
+[https://github.com/sobolevn/awesome-cryptography](https://github.com/sobolevn/awesome-cryptography) 
 
 # Who me?
 
-* github.com/shauryashaurya
+* [https://github.com/shauryashaurya](github.com/shauryashaurya)
 * shauryashaurya@gmail.com
-* [www.linkedin.com/in/shauryashaurya/](www.linkedin.com/in/shauryashaurya/)
+* [https://www.linkedin.com/in/shauryashaurya/](www.linkedin.com/in/shauryashaurya/)
 
